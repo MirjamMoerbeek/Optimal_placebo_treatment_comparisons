@@ -48,39 +48,22 @@ fun1=function(x)
   var.contrast.01=t(a.01)%*%covmat%*%a.01
   a.02=c(1,0,-1)
   var.contrast.02=t(a.02)%*%covmat%*%a.02
-print(c(var.contrast.01,var.contrast.02))
   
   # objective function
   criterion=lambda.01*var.contrast.01+lambda.02*var.contrast.02
   criterion
 }
 
-### objective function for D_A optimal design
-fun2=function(x)
-{
-  covmat=solve(x[1]* t(X.01)%*%solve(V.01)%*%X.01 + x[2]* t(X.02)%*%solve(V.02)%*%X.02)
-  
-  # matrix with coefficients of both contrasts
-  a.01=c(1,-1,0)
-  a.02=c(1,0,-1)
-  A=t(rbind(a.01,a.02))
-  
-  # objective function
-  criterion=det(t(A)%*%covmat%*%A)
-  criterion
-}
 
 #####################################################################################################################################
 ### evaluate all combinations of integer N.01 and N.02 >0 for which budget constraint holds
 #####################################################################################################################################
 N.01.max=ceiling(B/C.s01)
 N.01.vector=seq(0,N.01.max)
-results.mat=matrix(NA,nrow=(N.01.max),ncol=8)
-#
+results.mat=matrix(NA,nrow=(N.01.max),ncol=7) # matrix to store results
 
 for(ii in 2:(N.01.max-1))
 {
-  #print(ii)
   N.01=N.01.vector[ii]
   N.02=floor((B-C.s01*N.01)/C.s02)
   costs=C.s01*N.01+C.s02*N.02
@@ -100,9 +83,8 @@ for(ii in 2:(N.01.max-1))
   lambda.02=1-lambda.01
   objective1c=fun1(c(N.01,N.02))
 
-  ### D_A optimal design
-  objective2=fun2(c(N.01,N.02))
-  results.mat[ii,]=c(N.01,N.02,N.01+N.02,costs,objective1a,objective1b,objective1c,objective2)
+  ### store results in matrix	
+  results.mat[ii,]=c(N.01,N.02,N.01+N.02,costs,objective1a,objective1b,objective1c)
 }
 
 # compound optimal design with lambda.01=0.25
@@ -114,9 +96,6 @@ results.mat[optdes1b,1:3]
 # compound optimal design with lambda.01=0.75
 optdes1c=which.min(results.mat[,7])
 results.mat[optdes1c,1:3]
-# D_A optimal design
-optdes2=which.min(results.mat[,8])
-results.mat[optdes2,1:3]
 
 #####################################################################################################################################
 ### calculate relative efficiency of uniform design: compound optimal design and D_A optimal design
@@ -143,9 +122,6 @@ lambda.02=1-lambda.01
 RE.1u=results.mat[optdes1c,7]/fun1(c(N.u,N.u))
 round(RE.1u,3)
 
-# RE for D_A optimal design
-RE.2u=(results.mat[optdes2,8]/fun2(c(N.u,N.u)))^0.5
-round(RE.2u,3)
 
 #####################################################################################################################################
 ### calculate relative efficiency of complete design: compound optimal design
@@ -182,34 +158,6 @@ lambda.02=1-lambda.01
 criterion=lambda.01*var.contrast.01+lambda.02*var.contrast.02
 RE.1c=criterion/results.mat[optdes1c,7]
 round(RE.1c,3)
-
-#####################################################################################################################################
-### calculate relative efficiency of complete design: D_A optimal design
-#####################################################################################################################################
-# calculate number of subjects in complete design
-N.012=floor(B/(C.s+C.0+C.1+C.2))
-
-# calculate covariance matrix of means 
-covmat=solve(N.012*t(X.012)%*%solve(V.012)%*%X.012)
-
-# matrix with coefficients of both contrasts
-a.01=c(1,-1,0)
-a.02=c(1,0,-1)
-A=t(rbind(a.01,a.02))
- 
-# objective function
-criterion=det(t(A)%*%covmat%*%A)
-
-# relative efficiency
-RE.2=(criterion/results.mat[optdes2,8])^0.5
-round(RE.2,3)
-
-
-
-
-
-
-
 
 #####################################################################################################################################
 ### plots with sample sizes as a function of lambda_1
